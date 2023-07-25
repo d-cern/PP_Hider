@@ -8,6 +8,7 @@
 #define ACTION_EXTRACT  2
 
 
+unsigned char *readFile(char *filename, unsigned int *fileSize);
 int writeFile(char *filename, unsigned int filesize, unsigned char *dataStream);
 
 void displayBitmapInfo(     char *pFileName,
