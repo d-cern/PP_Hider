@@ -1,8 +1,18 @@
 #ifndef PALETTEPARITYHIDER_H
 #define PALETTEPARITYHIDER_H
 #include <stdio.h>
+#include <math.h>
+#include <windows.h>
 
-unsigned char *hideMessage(unsigned char *msgData, unsigned char *coverData);
-unsigned char *extractMessage(unsigned char *coverData);
+extern BITMAPFILEHEADER *gpCoverFileHdr, *gpStegoFileHdr;
+extern BITMAPINFOHEADER *gpCoverFileInfoHdr, *gpStegoFileInfoHdr;
+extern RGBQUAD *gpCoverPalette, *gpStegoPalette;
+extern unsigned int gCoverFileSize, gMsgFileSize, gStegoFileSize;
+
+BYTE *hideMessage(unsigned char *msgData, unsigned char *coverData);
+BYTE *extractMessage(unsigned char *coverData);
+
+BYTE getClosestColor(unsigned char pIdx, int **ccParities);
+BYTE getPixelColorParity(unsigned char pixelByte)
 
 #endif

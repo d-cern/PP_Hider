@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
 	// get the number of bits to use for data hiding or data extracting
 	// if not specified, default to one
 	initGlobals();
-	printf("test\n");
 	parseCommandLine(argc, argv);
 
 	if(0 == 0)
