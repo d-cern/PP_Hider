@@ -14,9 +14,9 @@ BITMAPINFOHEADER *gpCoverFileInfoHdr, *gpStegoFileInfoHdr;
 RGBQUAD *gpCoverPalette, *gpStegoPalette;
 unsigned int gCoverFileSize, gMsgFileSize, gStegoFileSize;
 
-char *gCoverFileName;
-char *gMsgFileName;
-char *gStegoFileName;
+char gCoverFileName[MAX_PATH];
+char gMsgFileName[MAX_PATH];
+char gStegoFileName[MAX_PATH];
 char gAction;						// typically hide (1), extract (2), wipe (3), randomize (4), but also specifies custom actions for specific programs
 
 
@@ -29,9 +29,10 @@ int main(int argc, char *argv[])
 	// get the number of bits to use for data hiding or data extracting
 	// if not specified, default to one
 	initGlobals();
+	printf("test\n");
 	parseCommandLine(argc, argv);
 
-	if(gCoverFileName[0] != 0)
+	if(0 == 0)
 	{
 		// read bmp
 		coverData = readFile(gCoverFileName, &gCoverFileSize);
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
 
 		printf("c=%02X, %02x\n", *coverData, *(coverData+1) );
 
-		displayFileInfo(gCoverFileName, gpCoverFileHdr, gpCoverFileInfoHdr, gpCoverPalette, pixelData);
+		displayBitmapInfo(gCoverFileName, gpCoverFileHdr, gpCoverFileInfoHdr, gpCoverPalette, pixelData);
 	}
 	
 	// hide
@@ -86,11 +87,11 @@ void initGlobals()
 
 	// Command Line Global Variables
 	//gCoverPathFileName[0] = 0;
-	gCoverFileName = NULL;
+	//gCoverFileName = NULL;
 	//gMsgPathFileName[0] = 0;
-	gMsgFileName = NULL;
+	//gMsgFileName = NULL;
 	//gStegoPathFileName[0] = 0;
-	gStegoFileName = NULL;
+	//gStegoFileName = NULL;
 	gAction = 0;						// typically hide (1), extract (2)
 
 	return;
@@ -110,9 +111,11 @@ void parseCommandLine(int argc, char *argv[])
 	cnt = 1;
 	while(cnt < argc)	// argv[0] = program name
 	{
+		printf("cnt = %d; %s\n", cnt, argv[cnt]);
 		if(_stricmp(argv[cnt], "-c") == 0)	// cover file
 		{
 			cnt++;
+			printf("cnt = %d; %s\n", cnt, argv[cnt]);
 			if(cnt == argc)
 			{
 				fprintf(stderr, "\n\nError - no file name following <%s> parameter.\n\n", argv[cnt-1]);
@@ -126,10 +129,12 @@ void parseCommandLine(int argc, char *argv[])
 				exit(-2);
 			}
 			*/
+			printf("in -c\n");
 
 			// Note: function doesn't seem to work with GCC
 			//GetFullPathName(argv[cnt], MAX_PATH, gCoverPathFileName, &gCoverFileName);
 			strncpy(gCoverFileName, argv[cnt], MAX_PATH);
+			printf("in -c\n");
 		}
 		else if(_stricmp(argv[cnt], "-m") == 0)	// msg file
 		{
@@ -193,6 +198,7 @@ void parseCommandLine(int argc, char *argv[])
 
 			gAction = ACTION_EXTRACT;
 		}
+		printf("cnt = %d\n", cnt);
 
 		cnt++;
 	} // end while loop
