@@ -1,6 +1,6 @@
 /* 
     Palette Parity Hider using Jiri Fridrich Technique 
-    Compiled with MinGW
+    Compiled with GCC using MinGW
 
     Duarte Cernadas
 */
@@ -22,9 +22,9 @@ char gAction;						// typically hide (1), extract (2), wipe (3), randomize (4), 
 
 int main(int argc, char *argv[])
 {
-	unsigned char *coverData, *pixelData;
-	unsigned char *msgData;
-	unsigned char *outputStream;
+	BYTE *coverData, *pixelData;
+	BYTE *msgData;
+	BYTE *outputStream;
 
 	// get the number of bits to use for data hiding or data extracting
 	// if not specified, default to one
@@ -111,11 +111,9 @@ void parseCommandLine(int argc, char *argv[])
 	cnt = 1;
 	while(cnt < argc)	// argv[0] = program name
 	{
-		printf("cnt = %d; %s\n", cnt, argv[cnt]);
 		if(_stricmp(argv[cnt], "-c") == 0)	// cover file
 		{
 			cnt++;
-			printf("cnt = %d; %s\n", cnt, argv[cnt]);
 			if(cnt == argc)
 			{
 				fprintf(stderr, "\n\nError - no file name following <%s> parameter.\n\n", argv[cnt-1]);
@@ -129,12 +127,10 @@ void parseCommandLine(int argc, char *argv[])
 				exit(-2);
 			}
 			*/
-			printf("in -c\n");
 
 			// Note: function doesn't seem to work with GCC
 			//GetFullPathName(argv[cnt], MAX_PATH, gCoverPathFileName, &gCoverFileName);
 			strncpy(gCoverFileName, argv[cnt], MAX_PATH);
-			printf("in -c\n");
 		}
 		else if(_stricmp(argv[cnt], "-m") == 0)	// msg file
 		{
@@ -198,7 +194,6 @@ void parseCommandLine(int argc, char *argv[])
 
 			gAction = ACTION_EXTRACT;
 		}
-		printf("cnt = %d\n", cnt);
 
 		cnt++;
 	} // end while loop

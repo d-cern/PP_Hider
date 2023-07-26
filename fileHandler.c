@@ -1,9 +1,9 @@
 #include "fileHandler.h"
 
-unsigned char *readFile(char *filename, unsigned int *fileSize)
+BYTE *readFile(char *filename, unsigned int *fileSize)
 {
 	FILE *ptrFile;
-	unsigned char *pFile;
+	BYTE *pFile;
 
 	ptrFile = fopen(filename, "rb");	// specify read only and binary (no CR/LF added)
 
@@ -18,7 +18,7 @@ unsigned char *readFile(char *filename, unsigned int *fileSize)
 	fseek(ptrFile, 0, SEEK_SET);
 
 	// malloc memory to hold the file, include room for the header and color table
-	pFile = (unsigned char *) malloc(*fileSize);
+	pFile = (BYTE *) malloc(*fileSize);
 
 	if(pFile == NULL)
 	{
@@ -28,7 +28,7 @@ unsigned char *readFile(char *filename, unsigned int *fileSize)
 
 	// Read in complete file
 	// buffer for data, size of each item, max # items, ptr to the file
-	fread(pFile, sizeof(unsigned char), *fileSize, ptrFile);
+	fread(pFile, sizeof(BYTE), *fileSize, ptrFile);
 	fclose(ptrFile);
 
 	return(pFile);
@@ -36,7 +36,7 @@ unsigned char *readFile(char *filename, unsigned int *fileSize)
 
 // writes modified bitmap file to disk
 // gMask used to determine the name of the file
-int writeFile(char *filename, unsigned int fileSize, unsigned char *pFile)
+int writeFile(char *filename, unsigned int fileSize, BYTE *pFile)
 {
 	FILE *ptrFile;
 	int ret;
@@ -50,7 +50,7 @@ int writeFile(char *filename, unsigned int fileSize, unsigned char *pFile)
 	}
 
 	// write the file
-	ret = (int) fwrite(pFile, sizeof(unsigned char), fileSize, ptrFile);
+	ret = (int) fwrite(pFile, sizeof(BYTE), fileSize, ptrFile);
 
 	// check for success
 	if(ret != fileSize)
@@ -66,11 +66,11 @@ int writeFile(char *filename, unsigned int fileSize, unsigned char *pFile)
 /* Bitmap Functions */
 
 // Show the various bitmap header bytes primarily for debugging
-void displayFileInfo(char *pFileName,
-					 BITMAPFILEHEADER *pFileHdr, 
-					 BITMAPINFOHEADER *pFileInfo,
-					 RGBQUAD *ptrPalette,
-					 unsigned char *pixelData)
+void displayBitmapInfo(	char *pFileName,
+					 	BITMAPFILEHEADER *pFileHdr, 
+					 	BITMAPINFOHEADER *pFileInfo,
+					 	RGBQUAD *ptrPalette,
+					 	BYTE *pixelData	)
 {
 	int numColors, i;
 
@@ -142,7 +142,7 @@ void displayFileInfo(char *pFileName,
 }
 
 // quick check for bitmap file validity - you may want to expand this or be more specfic for a particular bitmap type
-int isValidBitmap(unsigned char *fileData)
+int isValidBitmap(BYTE *fileData)
 {
 	if( fileData[0] != 'B' || fileData[1] != 'M') return -1;
 

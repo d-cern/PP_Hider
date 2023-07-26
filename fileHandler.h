@@ -8,15 +8,15 @@
 #define ACTION_EXTRACT  2
 
 
-unsigned char *readFile(char *filename, unsigned int *fileSize);
-int writeFile(char *filename, unsigned int filesize, unsigned char *dataStream);
+BYTE *readFile(char *filename, unsigned int *fileSize);
+int writeFile(char *filename, unsigned int filesize, BYTE *dataStream);
 
 void displayBitmapInfo(     char *pFileName,
                             BITMAPFILEHEADER *pFileHdr,
                             BITMAPINFOHEADER *pFileInfo,
                             RGBQUAD *ptrPalette,
-                            unsigned char *pixelData        );
-int isValidBitmap(unsigned char *fileData);
+                            BYTE *pixelData        );
+int isValidBitmap(BYTE *fileData);
 
 
 // the following structure information is taken from wingdi.h
