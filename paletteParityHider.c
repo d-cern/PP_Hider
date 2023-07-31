@@ -37,8 +37,8 @@ BYTE *hideMessage(BYTE *msgData, BYTE *coverData)
         // loop through bits in Byte
         for(int j = 0; i < 8; j++)
         {
-        //  |          select bit         |   set curMsgBit to selected bit value   |
-            (curMsgByte ^ gBitMasks[8 - j]) == 0 ? curMsgBit = 0 : curMsgBit = 1;
+        //              |         select bit          |   set curMsgBit to value of bit   |
+            curMsgBit = (curMsgByte ^ gBitMasks[8 - j]) == 0 ? 0 : 1;
             
             if(curMsgBit != getPixelColorParity(coverData[curPixel]))
             {
@@ -72,7 +72,7 @@ void getClosestColor(BYTE pIdx, int **ccParities)
         ccParities[pIdx][0] = pIdx;
 
         ccParities[pIdx][1] = 0;
-        curDistance = getColorDistance(gpCoverPalette[pIdx], gpCoverPalette[0])
+        curDistance = getColorDistance(gpCoverPalette[pIdx], gpCoverPalette[0]);
 
         for(BYTE i = 0; i < 0x100; i++)
         {
