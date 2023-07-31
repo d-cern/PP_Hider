@@ -13,7 +13,7 @@ extern unsigned int gCoverFileSize, gMsgFileSize, gStegoFileSize;
 BYTE *hideMessage(BYTE *msgData, BYTE *coverData);
 BYTE *extractMessage(BYTE *coverData);
 
-BYTE getClosestColor(BYTE pIdx, int **ccParities);
+void getClosestColor(BYTE pIdx, int **ccParities);
 BYTE getPixelColorParity(BYTE pixelByte);
 
 #endif
