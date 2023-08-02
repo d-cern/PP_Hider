@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 
-		outputStream = hideMessage(msgData, coverData);
+		outputStream = hideMessage(msgData, pixelData);
 	}
 
 	return 0;

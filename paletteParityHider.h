@@ -14,6 +14,7 @@ BYTE *hideMessage(BYTE *msgData, BYTE *coverData);
 BYTE *extractMessage(BYTE *coverData);
 
 void getClosestColor(BYTE pIdx, int **ccParities);
+int getColorDistance(RGBQUAD c1, RGBQUAD c2);
 BYTE getPixelColorParity(BYTE pixelByte);
 
 #endif
