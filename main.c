@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 
 		//displayBitmapInfo(gCoverFileName, gpCoverFileHdr, gpCoverFileInfoHdr, gpCoverPalette, pixelData);
 	}
-	
+
 	// hide
 	if(gAction == 1)
 	{
@@ -73,11 +73,19 @@ int main(int argc, char *argv[])
 	if(writeFile(gStegoFileName, gCoverFileSize, modCover))
 	{
 		fprintf(stderr, "Error: writeFile() - failed to write file\n");
+		free(coverData);
+		free(msgData);
+		free(modCover);
+
 		return -1;
 	}
 
+	free(coverData);
+	free(msgData);
+	free(modCover);
+
 	return 0;
-} // main
+}
 
 
 void initGlobals()
@@ -104,15 +112,16 @@ void initGlobals()
 
 void parseCommandLine(int argc, char *argv[])
 {
+	const char stegoFilePrefix[5] = "hid_\0";
 	int cnt;
 
 	if(argc < 2) usage();
 
 	// RESET Parameters to make error checking easier
 	gAction = 0;
-	//gCoverPathFileName[0] = 0;
-	//gMsgPathFileName[0] = 0;
-	//gStegoPathFileName[0] = 0;
+	gCoverFileName[0] = 0;
+	gMsgFileName[0] = 0;
+	gStegoFileName[0] = 0;
 	cnt = 1;
 	while(cnt < argc)	// argv[0] = program name
 	{
@@ -125,13 +134,11 @@ void parseCommandLine(int argc, char *argv[])
 				exit(-1);
 			}
 
-			/*
-			if(gCoverPathFileName[0] != 0)
+			if(gCoverFileName[0] != 0)
 			{
-				fprintf(stderr, "\n\nError - cover file <%s> already specified.\n\n", gCoverPathFileName);
+				fprintf(stderr, "\n\nError - cover file <%s> already specified.\n\n", gCoverFileName);
 				exit(-2);
 			}
-			*/
 
 			// Note: function doesn't seem to work with GCC
 			//GetFullPathName(argv[cnt], MAX_PATH, gCoverPathFileName, &gCoverFileName);
@@ -146,13 +153,11 @@ void parseCommandLine(int argc, char *argv[])
 				exit(-1);
 			}
 
-			/*
-			if(gMsgPathFileName[0] != 0)
+			if(gMsgFileName[0] != 0)
 			{
-				fprintf(stderr, "\n\nError - message file <%s> already specified.\n\n", gMsgPathFileName);
+				fprintf(stderr, "\n\nError - message file <%s> already specified.\n\n", gMsgFileName);
 				exit(-2);
 			}
-			*/
 
 			// Note: function doesn't seem to work with GCC
 			//GetFullPathName(argv[cnt], MAX_PATH, gMsgPathFileName, &gMsgFileName);
@@ -167,13 +172,11 @@ void parseCommandLine(int argc, char *argv[])
 				exit(-1);
 			}
 
-			/*
-			if(gStegoPathFileName[0] != 0)
+			if(gStegoFileName[0] != 0)
 			{
-				fprintf(stderr, "\n\nError - stego file <%s> already specified.\n\n", gStegoPathFileName);
+				fprintf(stderr, "\n\nError - stego file <%s> already specified.\n\n", gStegoFileName);
 				exit(-2);
 			}
-			*/
 
 			// Note: function doesn't seem to work with GCC
 			//GetFullPathName(argv[cnt], MAX_PATH, gStegoPathFileName, &gStegoFileName);
@@ -202,6 +205,36 @@ void parseCommandLine(int argc, char *argv[])
 
 		cnt++;
 	} // end while loop
+
+	// set output file name if not specified
+	if(gStegoFileName[0] == 0)
+	{
+		int tmplen = strnlen(gCoverFileName, MAX_PATH);
+		int fileNameStart;
+
+		// find start of file name:
+		// ./media/images/picture.bmp => ../|_|picture.bmp
+		for(int i = tmplen-1; i >= 0; i--)
+		{
+			if(gCoverFileName[i] == '\\' || gCoverFileName[i] == '/')
+			{
+				fileNameStart = i + 1;
+
+				strncpy(gStegoFileName, stegoFilePrefix, 5); // ./media/images/
+				strncat(gStegoFileName, gCoverFileName+fileNameStart, MAX_PATH - (tmplen + 4 - fileNameStart));
+				break;
+			}
+			else if(i == 0)
+			{
+				fileNameStart = 0;
+
+				strncpy(gStegoFileName, stegoFilePrefix, 5);
+				strncat(gStegoFileName, gCoverFileName, MAX_PATH - 4);
+			}
+		}
+
+		printf("%s\n", gStegoFileName);
+	}
 
 	return;
 }
