@@ -26,22 +26,38 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
     int ccParities[256][2];
 
     BYTE curMsgByte, curMsgBit;
-    BYTE curCoverByte, curCoverBit;
-    BYTE tmp;
-    //BYTE *modCover;     // cover data stream with hidden message
-    unsigned int curPixel = 0;
-
-    // allocate memory for output stream
-    //modCover = (BYTE *) malloc(strlen(pixelData) + sizeof(unsigned int));
+    //BYTE curCoverByte, curCoverBit;
+    //BYTE tmp;
+    BYTE *bytesToHide,                                  // msg data with its size prepended
+            *modCover;                                  // cover data stream with hidden message
+    unsigned int curPixel = sizeof(unsigned int) * 8;   // 1 bit per pixel for msg size
 
     // ccParities[][]: initialize all values to -1
+    memset(ccParities, -1, sizeof(unsigned int) * 256 * 2);
+    /*
     for(int i = 0; i < 256; i++)
     {
         for(int j = 0; j < 2; j++)
         {
             ccParities[i][j] = -1;
         }
-    }
+    } */
+
+    // allocate memory for output stream
+    modCover = (BYTE *) malloc(gpCoverFileInfoHdr->biSizeImage);
+    printf("modcover malloc %lu\n", gpCoverFileInfoHdr->biSizeImage);
+    // copy pixel data
+    memcpy(modCover, pixelData, gpCoverFileInfoHdr->biSizeImage);
+    printf("modcover memcpy\n");
+
+    // allocate memory for msg data with msg size
+    bytesToHide = (BYTE *) malloc(gMsgFileSize + sizeof(unsigned int));
+    // set first 4 bytes to msg size
+    memset(bytesToHide, gMsgFileSize, sizeof(unsigned int));
+    // copy message into bytesToHide
+    memcpy(bytesToHide, msgData+sizeof(unsigned int), gMsgFileSize);
+
+    printf("memory set\n");
 
     // loop through msg bytes
     for(unsigned int i = 0; i < gMsgFileSize; i++)
@@ -55,12 +71,12 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
             curMsgBit = (curMsgByte ^ gBitMasks[7 - j]) == 0 ? 0 : 1;
             
             // check if bit to hide is the same as parity of this pixel's color
-            if(curMsgBit != getPixelColorParity(pixelData[curPixel]))
+            if(curMsgBit != getPixelColorParity(modCover[curPixel]))
             {
-                getClosestColor(pixelData[curPixel], ccParities);
-                pixelData[curPixel] = ccParities[ pixelData[curPixel] ][curMsgBit];
+                getClosestColor(modCover[curPixel], ccParities);
+                modCover[curPixel] = ccParities[ modCover[curPixel] ][curMsgBit];
             }
-            else { pixelData[curPixel] = pixelData[curPixel]; }
+            else { modCover[curPixel] = modCover[curPixel]; }
 
             curPixel++;
         }
@@ -72,7 +88,7 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
         }
     }
 
-    return pixelData;
+    return modCover;
 }
 
 BYTE *extractMessage(BYTE *pixelData)
@@ -90,7 +106,6 @@ void getClosestColor(BYTE pIdx, int ccParities[256][2])
     // check if closest colors have already been calculated
     if(ccParities[pIdx][0] != -1)
     {
-        printf("exit\n");
         return;
     }
 
