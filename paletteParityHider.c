@@ -11,6 +11,7 @@ BYTE gBitMasks[8] = {
                                 0x7F    // 0111 1111
                             };
 
+// TODO: hide message size at beginning
 BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
 {
     /* ---------------------------------------
@@ -27,16 +28,16 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
     BYTE curMsgByte, curMsgBit;
     BYTE curCoverByte, curCoverBit;
     BYTE tmp;
-    BYTE *modCover;     // cover data stream with hidden message
+    //BYTE *modCover;     // cover data stream with hidden message
     unsigned int curPixel = 0;
 
     // allocate memory for output stream
-    modCover = (BYTE *) malloc(strlen(pixelData));
+    //modCover = (BYTE *) malloc(strlen(pixelData) + sizeof(unsigned int));
 
     // ccParities[][]: initialize all values to -1
     for(int i = 0; i < 256; i++)
     {
-        for(int j = 0; i < 2; j++)
+        for(int j = 0; j < 2; j++)
         {
             ccParities[i][j] = -1;
         }
@@ -48,20 +49,30 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
         curMsgByte = msgData[i];
 
         // loop through bits in Byte
-        for(int j = 0; i < 8; j++)
+        for(int j = 0; j < 8; j++)
         {
         //              |         select bit          |   set curMsgBit to value of bit   |
-            curMsgBit = (curMsgByte ^ gBitMasks[8 - j]) == 0 ? 0 : 1;
+            curMsgBit = (curMsgByte ^ gBitMasks[7 - j]) == 0 ? 0 : 1;
             
-            // check if bit to hide is the same as this pixel's color's parity
+            // check if bit to hide is the same as parity of this pixel's color
             if(curMsgBit != getPixelColorParity(pixelData[curPixel]))
             {
                 getClosestColor(pixelData[curPixel], ccParities);
+                pixelData[curPixel] = ccParities[ pixelData[curPixel] ][curMsgBit];
             }
-            //curCoverByte = pixelData[curPixel];
+            else { pixelData[curPixel] = pixelData[curPixel]; }
+
+            curPixel++;
         }
-        
+
+        if(curPixel >= gpCoverFileInfoHdr->biSizeImage)
+        {
+            printf("WARNING: hiding stopped at %u bytes\n", i);
+            break;
+        }
     }
+
+    return pixelData;
 }
 
 BYTE *extractMessage(BYTE *pixelData)
@@ -69,15 +80,17 @@ BYTE *extractMessage(BYTE *pixelData)
     return 0;
 }
 
-void getClosestColor(BYTE pIdx, int **ccParities)
+void getClosestColor(BYTE pIdx, int ccParities[256][2])
 {
     BYTE parity;
     BYTE ccIdx;     // closest color palette index
-    int closestDistance, curDistance;
+    double closestDistance, curDistance;
+    //printf("getClosestColor\n");
 
     // check if closest colors have already been calculated
     if(ccParities[pIdx][0] != -1)
     {
+        printf("exit\n");
         return;
     }
 
@@ -89,7 +102,7 @@ void getClosestColor(BYTE pIdx, int **ccParities)
         exit(-1);
     }
 
-    // closest color of same parity (0) is itself
+    // closest color of same parity is itself
     ccParities[pIdx][parity] = pIdx;
 
     // initialize at palette idx 0 (or 1 if pIdx == 0)
@@ -97,7 +110,7 @@ void getClosestColor(BYTE pIdx, int **ccParities)
     closestDistance = getColorDistance(gpCoverPalette[pIdx], gpCoverPalette[ccIdx]);
 
     // find closest color with opposite parity
-    for (BYTE i = 0; i < 0x100; i++)
+    for (int i = 0; i < 0x100; i++)
     {
         if(i == pIdx) continue; // skip self comparison
 
@@ -124,7 +137,7 @@ void getClosestColor(BYTE pIdx, int **ccParities)
 }
 
 // calculates the distance between 2 colors
-int getColorDistance(RGBQUAD c1, RGBQUAD c2)
+double getColorDistance(RGBQUAD c1, RGBQUAD c2)
 {
     return sqrt( pow((c1.rgbRed - c2.rgbRed), 2) + pow((c1.rgbGreen - c2.rgbGreen), 2) + pow((c1.rgbBlue - c2.rgbBlue), 2) );
 }

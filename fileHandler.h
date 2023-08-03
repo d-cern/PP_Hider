@@ -7,6 +7,10 @@
 #define ACTION_HIDE     1
 #define ACTION_EXTRACT  2
 
+extern BITMAPFILEHEADER *gpCoverFileHdr, *gpStegoFileHdr;
+extern BITMAPINFOHEADER *gpCoverFileInfoHdr, *gpStegoFileInfoHdr;
+extern RGBQUAD *gpCoverPalette, *gpStegoPalette;
+extern unsigned int gCoverFileSize, gMsgFileSize, gStegoFileSize;
 
 BYTE *readFile(char *filename, unsigned int *fileSize);
 int writeFile(char *filename, unsigned int filesize, BYTE *dataStream);

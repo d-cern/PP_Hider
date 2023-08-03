@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 {
 	BYTE *coverData, *pixelData;
 	BYTE *msgData;
-	BYTE *outputStream;
+	BYTE *modCover; // modified cover data
 
 	// get the number of bits to use for data hiding or data extracting
 	// if not specified, default to one
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
 		printf("c=%02X, %02x\n", *coverData, *(coverData+1) );
 
-		displayBitmapInfo(gCoverFileName, gpCoverFileHdr, gpCoverFileInfoHdr, gpCoverPalette, pixelData);
+		//displayBitmapInfo(gCoverFileName, gpCoverFileHdr, gpCoverFileInfoHdr, gpCoverPalette, pixelData);
 	}
 	
 	// hide
@@ -64,10 +64,16 @@ int main(int argc, char *argv[])
 		if(msgData == NULL)
 		{
 			free(coverData);
-			return 1;
+			return -1;
 		}
 
-		outputStream = hideMessage(msgData, pixelData);
+		modCover = hideMessage(msgData, pixelData);
+	}
+
+	if(writeFile(gStegoFileName, gCoverFileSize, modCover))
+	{
+		fprintf(stderr, "Error: writeFile() - failed to write file\n");
+		return -1;
 	}
 
 	return 0;

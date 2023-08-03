@@ -35,11 +35,10 @@ BYTE *readFile(char *filename, unsigned int *fileSize)
 }
 
 // writes modified bitmap file to disk
-// gMask used to determine the name of the file
-int writeFile(char *filename, unsigned int fileSize, BYTE *pFile)
+int writeFile(char *filename, unsigned int fileSize, BYTE *pixelData)
 {
 	FILE *ptrFile;
-	int ret;
+	int ret = 0;
 
 	// open the new file, MUST set binary format (text format will add line feed characters)
 	ptrFile = fopen(filename, "wb+");
@@ -50,12 +49,21 @@ int writeFile(char *filename, unsigned int fileSize, BYTE *pFile)
 	}
 
 	// write the file
-	ret = (int) fwrite(pFile, sizeof(BYTE), fileSize, ptrFile);
+	// file header
+	ret += (int) fwrite(gpCoverFileHdr, sizeof(BYTE), sizeof(BITMAPFILEHEADER), ptrFile);
+	// info header
+	ret += (int) fwrite(gpCoverFileInfoHdr, sizeof(BYTE), sizeof(BITMAPINFOHEADER), ptrFile);
+	// palette
+	ret += (int) fwrite(gpCoverPalette, sizeof(BYTE), 0x400, ptrFile);
+	// pixel data
+	ret += (int) fwrite(pixelData, sizeof(BYTE), gpCoverFileInfoHdr->biSizeImage, ptrFile);
 
 	// check for success
 	if(ret != fileSize)
 	{
-		printf("Error writing file %s.\n\n", filename);
+		printf("Error writing file %s\n", filename);
+		printf("bytes written = %d ; filesize = %d\n\n", ret, fileSize);
+		fclose(ptrFile);
 		return -1;
 	}
 
@@ -64,6 +72,24 @@ int writeFile(char *filename, unsigned int fileSize, BYTE *pFile)
 }
 
 /* Bitmap Functions */
+/*
+BYTE *combineBitmap(BYTE *pixelData)
+{
+	BYTE *modCover;
+	unsigned int dataLen, fileSize;
+	int i;
+
+	fileSize = sizeof(gpCoverFileHdr) + sizeof(gpCoverFileInfoHdr)
+						+ sizeof(gpCoverPalette) + sizeof(pixelData);
+	dataLen = strlen(pixelData);
+
+	modCover = (BYTE *) malloc(fileSize);
+
+	for(int i = 0; i < fileSize; i++)
+	{
+		
+	}
+}*/
 
 // Show the various bitmap header bytes primarily for debugging
 void displayBitmapInfo(	char *pFileName,
