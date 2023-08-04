@@ -3,6 +3,7 @@
     Compiled with GCC using MinGW
 
     Duarte Cernadas
+	Cameron Matthews
 */
 
 #include "main.h"
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
 	if(0 == 0)
 	{
 		// read bmp
-		imgData = readFile(*gpInFileName, gpInFileSize);
+		imgData = readFile(*gpInFileName, gpInFileSize, 1);
 		if(imgData == NULL) return 1;
 		// get header
 		*gpInFileHdr = (BITMAPFILEHEADER *) imgData;
@@ -90,12 +91,12 @@ int main(int argc, char *argv[])
 	// hide
 	if(gAction == ACTION_HIDE)
 	{
-		msgData = readFile(gMsgFileName, &gMsgFileSize);
+		msgData = readFile(gMsgFileName, &gMsgFileSize, 0);
 		//printf("msgfilesize = %u\n", gMsgFileSize);
 		if(msgData == NULL)
 		{
 			free(imgData);
-			return -1;
+			return 1;
 		}
 
 		modCover = hideMessage(msgData, pixelData);
@@ -107,7 +108,7 @@ int main(int argc, char *argv[])
 			free(msgData);
 			free(modCover);
 
-			return -1;
+			return 1;
 		}
 	}
 	// extract
@@ -121,7 +122,7 @@ int main(int argc, char *argv[])
 			free(imgData);
 			free(msgData);
 
-			return -1;
+			return 1;
 		}
 	}
 
