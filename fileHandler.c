@@ -48,18 +48,30 @@ int writeFile(char *filename, unsigned int fileSize, BYTE *pixelData)
 		return -1;
 	}
 
-	// write the file
-	// file header
-	ret += (int) fwrite(gpCoverFileHdr, sizeof(BYTE), sizeof(BITMAPFILEHEADER), ptrFile);
-	// info header
-	ret += (int) fwrite(gpCoverFileInfoHdr, sizeof(BYTE), sizeof(BITMAPINFOHEADER), ptrFile);
-	// palette
-	ret += (int) fwrite(gpCoverPalette, sizeof(BYTE), 0x400, ptrFile);
-	// pixel data
-	ret += (int) fwrite(pixelData, sizeof(BYTE), gpCoverFileInfoHdr->biSizeImage, ptrFile);
+	// write the bmp
+	if(gAction == ACTION_HIDE)
+	{
+		// file header
+		ret += (int) fwrite(*gpInFileHdr, sizeof(BYTE), sizeof(BITMAPFILEHEADER), ptrFile);
+		// info header
+		ret += (int) fwrite(*gpInFileInfoHdr, sizeof(BYTE), sizeof(BITMAPINFOHEADER), ptrFile);
+		// palette
+		ret += (int) fwrite(*gpInFilePalette, sizeof(BYTE), 0x400, ptrFile);
+		// pixel data
+		ret += (int) fwrite(pixelData, sizeof(BYTE), (*gpInFileInfoHdr)->biSizeImage, ptrFile);
+	}
+	else if(gAction == ACTION_EXTRACT)
+	{
+		ret += (int) fwrite(pixelData, sizeof(BYTE), gMsgFileSize, ptrFile);
+	}
+	else
+	{
+		fprintf(stderr, "Error: writeFile() - invalid gAction\n");
+		exit(-1);
+	}
 
 	// check for success
-	if(ret != fileSize)
+	if (ret != fileSize)
 	{
 		printf("Error writing file %s\n", filename);
 		printf("bytes written = %d ; filesize = %d\n\n", ret, fileSize);

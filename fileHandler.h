@@ -11,6 +11,14 @@ extern BITMAPFILEHEADER *gpCoverFileHdr, *gpStegoFileHdr;
 extern BITMAPINFOHEADER *gpCoverFileInfoHdr, *gpStegoFileInfoHdr;
 extern RGBQUAD *gpCoverPalette, *gpStegoPalette;
 extern unsigned int gCoverFileSize, gMsgFileSize, gStegoFileSize;
+extern char gAction;
+
+extern BITMAPFILEHEADER **gpInFileHdr;
+extern BITMAPINFOHEADER **gpInFileInfoHdr;
+extern RGBQUAD **gpInFilePalette;
+extern unsigned int *gpInFileSize;
+extern char (*gpInFileName)[MAX_PATH]; // shut up gcc
+
 
 BYTE *readFile(char *filename, unsigned int *fileSize);
 int writeFile(char *filename, unsigned int filesize, BYTE *dataStream);
