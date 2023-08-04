@@ -54,7 +54,8 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
     unsigned int tmp = gMsgFileSize;
     for(int i = 0; i < sizeof(unsigned int); i++)
     {
-        memset(bytesToHide+i, tmp, 1);
+        //memset(bytesToHide+i, tmp, 1);
+        *(bytesToHide+i) = (BYTE) tmp; // casting to BYTE truncates value
         tmp >>= 8;
     }
     // copy message into bytesToHide
