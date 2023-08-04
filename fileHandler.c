@@ -9,7 +9,7 @@ BYTE *readFile(char *filename, unsigned int *fileSize)
 
 	if(ptrFile == NULL)
 	{
-		printf("Error: Could not open file: %s.\n\n", filename);
+		printf("Error: Could not open file for reading: %s.\n\n", filename);
 		return NULL;
 	}
 
@@ -17,7 +17,7 @@ BYTE *readFile(char *filename, unsigned int *fileSize)
 	*fileSize = ftell(ptrFile);
 	fseek(ptrFile, 0, SEEK_SET);
 
-	// malloc memory to hold the file, include room for the header and color table
+	// malloc memory to hold the file
 	pFile = (BYTE *) malloc(*fileSize);
 
 	if(pFile == NULL)
