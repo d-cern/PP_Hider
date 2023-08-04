@@ -10,38 +10,8 @@ BYTE gBitMasks[8] = {
                                 0x40,   // 0100 0000
                                 0x80    // 1000 0000
                             };
-//DWORD gBitMasksD[8] = {
-//                                0x01,   // 0000 0001
-//                                0x02,   // 0000 0010
-//                                0x04,   // 0000 0100
-//                                0x08,   // 0000 1000
-//                                0x10,   // 0001 0000
-//                                0x20,   // 0010 0000
-//                                0x40,   // 0100 0000
-//                                0x80,   // 1000 0000
-//                                0x100,
-//                                0x200,
-//                                0x400,
-//                                0x800,
-//                                0x1000,
-//                                0x2000,
-//                                0x4000,
-//                                0x8000,
-//                                0x10000,
-//                                0x20000,
-//                                0x40000,
-//                                0x80000,
-//                                0x100000,
-//                                0x200000,
-//                                0x400000,
-//                                0x800000,
-//                                0x1000000,
-//                                0x2000000,
-//                                0x4000000,
-//                                0x8000000
-//                            };
 
-// TODO: hide message size at beginning
+
 BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
 {
     /* ---------------------------------------
@@ -120,6 +90,16 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
         }
     }
     free(bytesToHide);
+/*
+    for(int i = 0; i < 256; i++)
+    {
+        printf("i %0x: ", i);
+        for(int j = 0; j < 2; j++)
+        {
+            printf("%0x ", ccParities[i][j]);
+        }
+        printf("\n");
+    }*/
 
     return modCover;
 }
@@ -128,31 +108,67 @@ BYTE *extractMessage(BYTE *pixelData)
 {
     int colorParities[256];
 
-    BYTE curImgByte, curImgBit;
     BYTE *outMsgData;
-    unsigned int msgSize = 0;
+    BYTE btmp, *bytesMsg;
     unsigned int curPixel = 0;
+
+    bytesMsg = (BYTE *) malloc(sizeof(unsigned int) * sizeof(BYTE));
 
     // set array to -1
     memset(colorParities, -1, 256 * sizeof(int));
 
     // read message size
-    for(int i = 0; i < 8 * sizeof(unsigned int); i++, curPixel++)
+    for(int i = 0; i < sizeof(unsigned int); i++)
     {
-        if(colorParities[ pixelData[curPixel] ] == -1)
+        btmp = 0;
+
+        for(int j = 0; j < 8; j++)
         {
-            colorParities[ pixelData[curPixel] ] = getPixelColorParity(pixelData[curPixel]);
+            if(colorParities[pixelData[curPixel]] == -1)
+            {
+                colorParities[pixelData[curPixel]] = getPixelColorParity(pixelData[curPixel]);
+            }
+
+            // lshift 1
+            btmp <<= 1;
+            // add parity bit
+            btmp += colorParities[pixelData[curPixel]];
+            curPixel++;
         }
 
-        // lshift 1
-        msgSize <<= 1;
-        // add parity bit
-        msgSize += colorParities[ pixelData[curPixel] ];
+        *(bytesMsg+i) = btmp;
     }
 
-    printf("msg size = %u\n", msgSize);
+    gMsgFileSize = *((unsigned int *) bytesMsg);
+    free(bytesMsg);
+    //printf("msg size = %u\n", gMsgFileSize);
 
-    return NULL;
+    // allocate memory for output message byte stream
+    outMsgData = (BYTE *) malloc(gMsgFileSize * sizeof(BYTE));
+
+    for(int i = 0; i < gMsgFileSize; i++)
+    {
+        btmp = 0;
+
+        for(int j = 0; j < 8; j++)
+        {
+            
+            if(colorParities[pixelData[curPixel]] == -1)
+            {
+                colorParities[pixelData[curPixel]] = getPixelColorParity(pixelData[curPixel]);
+            }
+
+            // lshift 1
+            btmp <<= 1;
+            // add parity bit
+            btmp += colorParities[pixelData[curPixel]];
+            curPixel++;
+        }
+
+        *(outMsgData + i) = btmp;
+    }
+
+    return outMsgData;
 }
 
 void getClosestColor(BYTE pIdx, int ccParities[256][2])
