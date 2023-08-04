@@ -1,6 +1,6 @@
 #include "fileHandler.h"
 
-BYTE *readFile(char *filename, unsigned int *fileSize)
+BYTE *readFile(char *filename, unsigned int *fileSize, char mode)
 {
 	FILE *ptrFile;
 	BYTE *pFile;
@@ -30,6 +30,14 @@ BYTE *readFile(char *filename, unsigned int *fileSize)
 	// buffer for data, size of each item, max # items, ptr to the file
 	fread(pFile, sizeof(BYTE), *fileSize, ptrFile);
 	fclose(ptrFile);
+
+	// check file signature bytes
+	if(mode == 1 && *pFile != 0x42 && pFile != 0x4D)
+	{
+		fprintf(stderr, "Error: readFile() - %s is not a .bmp file\n", filename);
+		free(pFile);
+		return NULL;
+	}
 
 	return(pFile);
 }

@@ -20,7 +20,7 @@ extern unsigned int *gpInFileSize;
 extern char (*gpInFileName)[MAX_PATH]; // shut up gcc
 
 
-BYTE *readFile(char *filename, unsigned int *fileSize);
+BYTE *readFile(char *filename, unsigned int *fileSize, char mode);
 int writeFile(char *filename, unsigned int filesize, BYTE *dataStream);
 
 void displayBitmapInfo(     char *pFileName,
