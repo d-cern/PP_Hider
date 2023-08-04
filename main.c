@@ -22,7 +22,13 @@ char gAction;						// typically hide (1), extract (2), wipe (3), randomize (4), 
 
 int main(int argc, char *argv[])
 {
-	BYTE *coverData, *pixelData;
+	BITMAPFILEHEADER **pInFileHdr;
+	BITMAPINFOHEADER **pInFileInfoHdr;
+	RGBQUAD **pInFilePalette;
+	unsigned int *pInFileSize;
+	char (*pInFileName)[MAX_PATH]; // shut up gcc
+
+	BYTE *imgData, *pixelData;
 	BYTE *msgData;
 	BYTE *modCover; // modified cover data
 
@@ -31,56 +37,86 @@ int main(int argc, char *argv[])
 	initGlobals();
 	parseCommandLine(argc, argv);
 
+	// set pointers
+	if(gAction == ACTION_HIDE)
+	{
+		pInFileHdr = &gpCoverFileHdr;
+		pInFileInfoHdr = &gpCoverFileInfoHdr;
+		pInFilePalette = &gpCoverPalette;
+		pInFileSize = &gCoverFileSize;
+		pInFileName = &gCoverFileName;
+	}
+	else if(gAction == ACTION_EXTRACT)
+	{
+		pInFileHdr = &gpStegoFileHdr;
+		pInFileInfoHdr = &gpStegoFileInfoHdr;
+		pInFilePalette = &gpStegoPalette;
+		pInFileSize = &gStegoFileSize;
+		pInFileName = &gStegoFileName;
+	}
+	else
+	{
+		fprintf(stderr, "Error: main() - invalid action\n");
+		return 1;
+	}
+
 	if(0 == 0)
 	{
 		// read bmp
-		coverData = readFile(gCoverFileName, &gCoverFileSize);
+		imgData = readFile(*pInFileName, pInFileSize);
+		if(imgData == NULL) return 1;
 		// get header
-		gpCoverFileHdr = (BITMAPFILEHEADER *) coverData;
+		*pInFileHdr = (BITMAPFILEHEADER *) imgData;
 		// get info header
-		gpCoverFileInfoHdr = (BITMAPINFOHEADER *) (coverData + sizeof(BITMAPFILEHEADER) );
+		*pInFileInfoHdr = (BITMAPINFOHEADER *) (imgData + sizeof(BITMAPFILEHEADER) );
 
 		//	There are no palettes
-		if(gpCoverFileInfoHdr->biBitCount > 16 || gpCoverFileInfoHdr->biBitCount == -1)
+		if((*pInFileInfoHdr)->biBitCount > 16 || (*pInFileInfoHdr)->biBitCount == -1)
 		{
-			printf("\nError: Cover image does not have a palette\n\n");
-			if(coverData) free(coverData);
+			printf("\nError: Input image does not have a palette\n\n");
+			if(imgData) free(imgData);
 			return 1;
 		}
-		gpCoverPalette = (RGBQUAD *) ( (char *) coverData + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) );
+		*pInFilePalette = (RGBQUAD *) ( (char *) imgData + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) );
 
-		pixelData = coverData + gpCoverFileHdr->bfOffBits;
+		pixelData = imgData + (*pInFileHdr)->bfOffBits;
 
 
-		printf("c=%02X, %02x\n", *coverData, *(coverData+1) );
+		printf("c=%02X, %02x\n", *imgData, *(imgData+1) );
 
-		//displayBitmapInfo(gCoverFileName, gpCoverFileHdr, gpCoverFileInfoHdr, gpCoverPalette, pixelData);
+		//displayBitmapInfo(gCoverFileName, pInFileHdr, pInFileInfoHdr, pInFilePalette, pixelData);
 	}
 
 	// hide
-	if(gAction == 1)
+	if(gAction == ACTION_HIDE)
 	{
 		msgData = readFile(gMsgFileName, &gMsgFileSize);
+		//printf("msgfilesize = %u\n", gMsgFileSize);
 		if(msgData == NULL)
 		{
-			free(coverData);
+			free(imgData);
 			return -1;
 		}
 
 		modCover = hideMessage(msgData, pixelData);
-	}
 
-	if(writeFile(gStegoFileName, gCoverFileSize, modCover))
+		if (writeFile(gStegoFileName, gCoverFileSize, modCover))
+		{
+			fprintf(stderr, "Error: writeFile() - failed to write file\n");
+			free(imgData);
+			free(msgData);
+			free(modCover);
+
+			return -1;
+		}
+	}
+	// extract
+	else if(gAction == ACTION_EXTRACT)
 	{
-		fprintf(stderr, "Error: writeFile() - failed to write file\n");
-		free(coverData);
-		free(msgData);
-		free(modCover);
-
-		return -1;
+		msgData = extractMessage(pixelData);
 	}
 
-	free(coverData);
+	free(imgData);
 	free(msgData);
 	free(modCover);
 
@@ -112,6 +148,7 @@ void initGlobals()
 
 void parseCommandLine(int argc, char *argv[])
 {
+	const char extractFilePrefix[5] = "ext_\0";
 	const char stegoFilePrefix[5] = "hid_\0";
 	int cnt;
 
@@ -206,11 +243,20 @@ void parseCommandLine(int argc, char *argv[])
 		cnt++;
 	} // end while loop
 
-	// set output file name if not specified
-	if(gStegoFileName[0] == 0)
+	// if not specified, set stego/msg file output name
+	if(
+		(gStegoFileName[0] == 0 && gAction == ACTION_HIDE) || 
+		(gMsgFileName[0] == 0 && gAction == ACTION_EXTRACT)	)
 	{
+		const char *prefix;
+		char *fileOut;
 		int tmplen = strnlen(gCoverFileName, MAX_PATH);
 		int fileNameStart;
+
+		// set file type
+		fileOut = gAction == ACTION_HIDE ? gStegoFileName : gMsgFileName;
+		// set file name prefix
+ 		prefix = gAction == ACTION_HIDE ? stegoFilePrefix : extractFilePrefix;
 
 		// find start of file name:
 		// ./media/images/picture.bmp => ../|_|picture.bmp
@@ -220,23 +266,21 @@ void parseCommandLine(int argc, char *argv[])
 			{
 				fileNameStart = i + 1;
 
-				strncpy(gStegoFileName, stegoFilePrefix, 5); // ./media/images/
-				strncat(gStegoFileName, gCoverFileName+fileNameStart, MAX_PATH - (tmplen + 4 - fileNameStart));
+				strncpy(fileOut, prefix, 5); // ./media/images/
+				strncat(fileOut, gCoverFileName+fileNameStart, MAX_PATH - (tmplen + 4 - fileNameStart));
 				break;
 			}
 			else if(i == 0)
 			{
 				fileNameStart = 0;
 
-				strncpy(gStegoFileName, stegoFilePrefix, 5);
-				strncat(gStegoFileName, gCoverFileName, MAX_PATH - 4);
+				strncpy(fileOut, prefix, 5);
+				strncat(fileOut, gCoverFileName, MAX_PATH - 4);
 			}
 		}
 
-		printf("%s\n", gStegoFileName);
+		printf("%s\n", fileOut);
 	}
-
-	return;
 }
 
 // prints help message to the screen
