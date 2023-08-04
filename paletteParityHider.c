@@ -1,15 +1,45 @@
 #include "paletteParityHider.h"
 
 BYTE gBitMasks[8] = {
-                                0xFE,   // 1111 1110
-                                0xFD,   // 1111 1101
-                                0xFB,   // 1111 1011
-                                0xF7,   // 1111 0111
-                                0xEF,   // 1110 1111
-                                0xDF,   // 1101 1111
-                                0xBF,   // 1011 1111
-                                0x7F    // 0111 1111
+                                0x01,   // 0000 0001
+                                0x02,   // 0000 0010
+                                0x04,   // 0000 0100
+                                0x08,   // 0000 1000
+                                0x10,   // 0001 0000
+                                0x20,   // 0010 0000
+                                0x40,   // 0100 0000
+                                0x80    // 1000 0000
                             };
+//DWORD gBitMasksD[8] = {
+//                                0x01,   // 0000 0001
+//                                0x02,   // 0000 0010
+//                                0x04,   // 0000 0100
+//                                0x08,   // 0000 1000
+//                                0x10,   // 0001 0000
+//                                0x20,   // 0010 0000
+//                                0x40,   // 0100 0000
+//                                0x80,   // 1000 0000
+//                                0x100,
+//                                0x200,
+//                                0x400,
+//                                0x800,
+//                                0x1000,
+//                                0x2000,
+//                                0x4000,
+//                                0x8000,
+//                                0x10000,
+//                                0x20000,
+//                                0x40000,
+//                                0x80000,
+//                                0x100000,
+//                                0x200000,
+//                                0x400000,
+//                                0x800000,
+//                                0x1000000,
+//                                0x2000000,
+//                                0x4000000,
+//                                0x8000000
+//                            };
 
 // TODO: hide message size at beginning
 BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
@@ -28,9 +58,9 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
     BYTE curMsgByte, curMsgBit;
     //BYTE curCoverByte, curCoverBit;
     //BYTE tmp;
-    BYTE *bytesToHide,                                  // msg data with its size prepended
-            *modCover;                                  // cover data stream with hidden message
-    unsigned int curPixel = sizeof(unsigned int) * 8;   // 1 bit per pixel for msg size
+    BYTE *bytesToHide,          // msg data with its size prepended
+            *modCover;          // cover data stream with hidden message
+    unsigned int curPixel = 0;
 
     // ccParities[][]: initialize all values to -1
     memset(ccParities, -1, sizeof(unsigned int) * 256 * 2);
@@ -45,30 +75,32 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
 
     // allocate memory for output stream
     modCover = (BYTE *) malloc(gpCoverFileInfoHdr->biSizeImage);
-    printf("modcover malloc %lu\n", gpCoverFileInfoHdr->biSizeImage);
     // copy pixel data
     memcpy(modCover, pixelData, gpCoverFileInfoHdr->biSizeImage);
-    printf("modcover memcpy\n");
 
     // allocate memory for msg data with msg size
     bytesToHide = (BYTE *) malloc(gMsgFileSize + sizeof(unsigned int));
-    // set first 4 bytes to msg size
-    memset(bytesToHide, gMsgFileSize, sizeof(unsigned int));
+    // set first 4 bytes to msg size : little endian
+    unsigned int tmp = gMsgFileSize;
+    for(int i = 0; i < sizeof(unsigned int); i++)
+    {
+        memset(bytesToHide+i, tmp, 1);
+        tmp >>= 8;
+    }
     // copy message into bytesToHide
-    memcpy(bytesToHide, msgData+sizeof(unsigned int), gMsgFileSize);
+    memcpy(bytesToHide+sizeof(unsigned int), msgData, gMsgFileSize);
 
-    printf("memory set\n");
 
     // loop through msg bytes
-    for(unsigned int i = 0; i < gMsgFileSize; i++)
+    for(unsigned int i = 0; i < gMsgFileSize+sizeof(unsigned int); i++)
     {
-        curMsgByte = msgData[i];
+        curMsgByte = bytesToHide[i];
 
         // loop through bits in Byte
         for(int j = 0; j < 8; j++)
         {
         //              |         select bit          |   set curMsgBit to value of bit   |
-            curMsgBit = (curMsgByte ^ gBitMasks[7 - j]) == 0 ? 0 : 1;
+            curMsgBit = (curMsgByte & gBitMasks[7 - j]) == 0 ? 0 : 1;
             
             // check if bit to hide is the same as parity of this pixel's color
             if(curMsgBit != getPixelColorParity(modCover[curPixel]))
@@ -76,7 +108,7 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
                 getClosestColor(modCover[curPixel], ccParities);
                 modCover[curPixel] = ccParities[ modCover[curPixel] ][curMsgBit];
             }
-            else { modCover[curPixel] = modCover[curPixel]; }
+            //else { modCover[curPixel] = modCover[curPixel]; }
 
             curPixel++;
         }
@@ -87,13 +119,40 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
             break;
         }
     }
+    free(bytesToHide);
 
     return modCover;
 }
 
 BYTE *extractMessage(BYTE *pixelData)
 {
-    return 0;
+    int colorParities[256];
+
+    BYTE curImgByte, curImgBit;
+    BYTE *outMsgData;
+    unsigned int msgSize = 0;
+    unsigned int curPixel = 0;
+
+    // set array to -1
+    memset(colorParities, -1, 256 * sizeof(int));
+
+    // read message size
+    for(int i = 0; i < 8 * sizeof(unsigned int); i++, curPixel++)
+    {
+        if(colorParities[ pixelData[curPixel] ] == -1)
+        {
+            colorParities[ pixelData[curPixel] ] = getPixelColorParity(pixelData[curPixel]);
+        }
+
+        // lshift 1
+        msgSize <<= 1;
+        // add parity bit
+        msgSize += colorParities[ pixelData[curPixel] ];
+    }
+
+    printf("msg size = %u\n", msgSize);
+
+    return NULL;
 }
 
 void getClosestColor(BYTE pIdx, int ccParities[256][2])
@@ -161,5 +220,8 @@ double getColorDistance(RGBQUAD c1, RGBQUAD c2)
 // (r + g + b) % 2
 BYTE getPixelColorParity(BYTE pixelByte)
 {
-    return (gpCoverPalette[pixelByte].rgbRed + gpCoverPalette[pixelByte].rgbGreen + gpCoverPalette[pixelByte].rgbBlue) % 2;
+    if(gAction == ACTION_HIDE)
+        return (gpCoverPalette[pixelByte].rgbRed + gpCoverPalette[pixelByte].rgbGreen + gpCoverPalette[pixelByte].rgbBlue) % 2;
+    else
+        return (gpStegoPalette[pixelByte].rgbRed + gpStegoPalette[pixelByte].rgbGreen + gpStegoPalette[pixelByte].rgbBlue) % 2;
 }
