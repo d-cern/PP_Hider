@@ -14,6 +14,7 @@
     #define BYTE unsigned char
     #define WORD unsigned short
     #define LONG long
+    #define MAX_PATH 260
 
     // the following structure information is taken from wingdi.h
     /* constants for the biCompression field */
