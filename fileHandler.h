@@ -1,8 +1,16 @@
 #ifndef FILEFUNC_H
 #define FILEFUNC_H
 
-#include <stdio.h>
-#include <windows.h>
+#ifdef _WIN32
+    #include <windows.h>
+    #include <stdio.h>
+    #include <math.h>
+#else
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+    #include <math.h>
+#endif
 
 #define ACTION_HIDE     1
 #define ACTION_EXTRACT  2
