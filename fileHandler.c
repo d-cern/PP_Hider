@@ -32,7 +32,7 @@ BYTE *readFile(char *filename, unsigned int *fileSize, char mode)
 	fclose(ptrFile);
 
 	// check file signature bytes
-	if(mode == 1 && *pFile != 0x42 && pFile != 0x4D)
+	if(mode == 1 && *pFile != 0x42 && *pFile != 0x4D)
 	{
 		fprintf(stderr, "Error: readFile() - %s is not a .bmp file\n", filename);
 		free(pFile);
