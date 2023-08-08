@@ -4,12 +4,14 @@ Based on the technique outlined by Jiri Fridrich and Rui Wu.
 Parity refers to the even/odd-ness of the sum of a pixel's color components, RGB.
 
 Basic Algorithm:
+```
 for pixel in image:
         if msgBit == parity(pixel.color):
                 continue
         else:
                 pixel.color = getClosestColorOfParity(pixel.color, msgBit)
         endif
+```
                 
 Compiled with GCC using [MSYS2 MinGW](https://www.mingw-w64.org/downloads/).
 
