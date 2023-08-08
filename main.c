@@ -110,6 +110,8 @@ int main(int argc, char *argv[])
 
 			return 1;
 		}
+
+		free(modCover);
 	}
 	// extract
 	else if(gAction == ACTION_EXTRACT)
@@ -128,7 +130,6 @@ int main(int argc, char *argv[])
 
 	free(imgData);
 	free(msgData);
-	free(modCover);
 
 	return 0;
 }
