@@ -18,4 +18,4 @@ main.o: main.c paletteParityHider.h fileHandler.h
 	$(CC) $(CFLAGS) -c main.c
 
 PP_Hider.exe: main.o paletteParityHider.o fileHandler.o
-	$(CC) $(CFLAGS) $(OBJFILES) -o PP_Hider.exe
+	$(CC) $(CFLAGS) $(OBJFILES) -lm -o PP_Hider.exe

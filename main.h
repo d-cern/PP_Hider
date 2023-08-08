@@ -10,6 +10,8 @@
     #include <stdlib.h>
     #include <string.h>
     #include <math.h>
+
+    #define _stricmp strcasecmp
 #endif
 
 #include "fileHandler.h"

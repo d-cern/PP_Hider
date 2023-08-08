@@ -10,8 +10,7 @@
     #include <stdlib.h>
     #include <string.h>
     #include <math.h>
-
-    #define BYTE unsigned char
+    #include "fileHandler.h"
 #endif
 
 #define ACTION_HIDE     1

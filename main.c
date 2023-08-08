@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 		//	There are no palettes
 		if((*gpInFileInfoHdr)->biBitCount > 16 || (*gpInFileInfoHdr)->biBitCount == -1)
 		{
-			printf("\nError: Input image does not have a palette\n\n");
+			printf("\nError: input image does not have a palette\n\n");
 			if(imgData) free(imgData);
 			return 1;
 		}
