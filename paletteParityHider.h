@@ -10,6 +10,8 @@
     #include <stdlib.h>
     #include <string.h>
     #include <math.h>
+
+    #define BYTE unsigned char
 #endif
 
 #define ACTION_HIDE     1
