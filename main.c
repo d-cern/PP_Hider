@@ -1,9 +1,8 @@
 /* 
-    Palette Parity Hider using Jiri Fridrich Technique 
+    Palette Parity Hider using Dr. Jiri Fridrich Technique 
     Compiled with GCC using MinGW
 
     Duarte Cernadas
-	Cameron Matthews
 */
 
 #include "main.h"
@@ -313,6 +312,8 @@ void usage()
 
 	fprintf(stdout, "To Extract:\n");
 	fprintf(stdout, "\t%s -extract -s <stego file> [-m <message file>]\n\n", programName);
+
+	fprintf(stdout, "WARNING: PROGRAM DOES NOT WORK CORRECTLY IF ONE OF THE FILES IS A PATH\n\n");
 
 	//fprintf(stdout, "Parameters:\n");
 	//fprintf(stdout, "Set number of bits to hide per pixel:	-b ( 1 to 8 def:1 )\n\n");

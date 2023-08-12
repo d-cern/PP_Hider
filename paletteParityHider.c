@@ -65,6 +65,12 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
     // loop through msg bytes
     for(unsigned int i = 0; i < gMsgFileSize+sizeof(unsigned int); i++)
     {
+        if(curPixel >= gpCoverFileInfoHdr->biSizeImage)
+        {
+            printf("WARNING: hiding stopped at %u bytes of %llu\n", i, gMsgFileSize+sizeof(unsigned int));
+            break;
+        }
+
         curMsgByte = bytesToHide[i];
 
         // loop through bits in Byte
@@ -84,11 +90,6 @@ BYTE *hideMessage(BYTE *msgData, BYTE *pixelData)
             curPixel++;
         }
 
-        if(curPixel >= gpCoverFileInfoHdr->biSizeImage)
-        {
-            printf("WARNING: hiding stopped at %u bytes\n", i);
-            break;
-        }
     }
     free(bytesToHide);
 /*
@@ -121,6 +122,11 @@ BYTE *extractMessage(BYTE *pixelData)
     // read message size
     for(int i = 0; i < sizeof(unsigned int); i++)
     {
+        if(curPixel >= gpStegoFileInfoHdr->biSizeImage)
+        {
+            printf("WARNING: extracting stopped at %u bytes of %llu\n", i, gMsgFileSize+sizeof(unsigned int));
+            break;
+        }
         btmp = 0;
 
         for(int j = 0; j < 8; j++)
